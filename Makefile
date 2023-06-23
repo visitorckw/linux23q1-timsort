@@ -3,12 +3,14 @@ CFLAGS = -O2
 
 all: main
 
-OBJS := main.o list_sort.o shiverssort.o \
-        timsort.o list_sort_old.o
+mainOBJS := main.o list_sort.o shiverssort.o \
+        timsort.o list_sort_old.o inplace_timsort.o
+measureOBJS := measure.o list_sort.o shiverssort.o \
+		timsort.o list_sort_old.o inplace_timsort.o
 
 deps := $(OBJS:%.o=.%.o.d)
 
-main: $(OBJS)
+main: $(mainOBJS)
 	$(CC) -o $@ $(LDFLAGS) $^
 
 %.o: %.c
@@ -17,8 +19,13 @@ main: $(OBJS)
 test: main
 	@./main
 
+measure: $(measureOBJS)
+	$(MAKE) main
+	$(CC) -o $@ $(CFLAGS) $^
+
 clean:
-	rm -f $(OBJS) $(deps) *~ main
+	rm -f $(mainOBJS) $(deps) *~ main
+	rm -f $(measureOBJS) $(deps) *~ main
 	rm -rf *.dSYM
 
 -include $(deps)
