@@ -10,6 +10,7 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
+// #define DEBUG_TIMSORT
 #define MAX_MERGE_PENDING 85
 
 struct run {
@@ -92,7 +93,7 @@ static void merge_final(void *priv, list_cmp_func_t cmp, struct list_head *head,
 }
 
 static struct list_head *find_run(void *priv, struct list_head *list,
-				  size_t *len, list_cmp_func_t cmp)
+				  size_t *len, list_cmp_func_t cmp, struct run* run_head)
 {
 	*len = 1;
 	struct list_head *next = list->next;
@@ -109,9 +110,11 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 			prev = list;
 			list = next;
 			next = list->next;
+			run_head->list = list;
 		} while (next && cmp(priv, list, next) > 0);
 		list->next = prev;
 	} else {
+		run_head->list = list;
 		do {
 			(*len)++;
 			list = next;
@@ -168,6 +171,42 @@ static struct run *merge_collapse(void *priv, list_cmp_func_t cmp,
 	return tp;
 }
 
+#include <stdio.h>
+#ifdef DEBUG_TIMSORT
+typedef struct element {
+	struct list_head list;
+	int val;
+	int seq;
+} element_t;
+// #include <stdio.h>
+void printing_list(struct run* stk, struct run* tp)
+{
+	// return;
+	// if(!head)
+	// 	return;
+	// element_t *entry, *safe;
+	// for(struct list_head* cur = head->next; cur ; cur = cur->next) {
+	// 	entry = list_entry(cur, element_t, list);
+	// 	printf("%d ", entry->val);
+
+	// }
+	// printf("\n");
+	printf("start print stack:\n");
+	while(tp >= stk) {
+		printf("len: %lu\n", tp->len);
+		struct list_head* cur = tp->list;
+		while(cur) {
+			element_t *entry = list_entry(cur, element_t, list);
+			printf("%d ", entry->val);
+			cur = cur->next;
+		}
+		printf("\n");
+		tp--;
+	}
+	printf("end print stack\n\n");
+}
+#endif
+
 void timsort(void *priv, struct list_head *head, list_cmp_func_t cmp)
 {
 	struct list_head *list = head->next;
@@ -183,9 +222,24 @@ void timsort(void *priv, struct list_head *head, list_cmp_func_t cmp)
 		tp++;
 		/* Find next run */
 		tp->list = list;
-		list = find_run(priv, list, &tp->len, cmp);
+		list = find_run(priv, list, &tp->len, cmp, tp);
+		#ifdef DEBUG_TIMSORT
+		printf("new run:\n");
+		for(struct list_head* cur = tp->list; cur ; cur = cur->next) {
+			element_t *entry = list_entry(cur, element_t, list);
+			printf("%d ", entry->val);
+		}
+		printf("\n");
+		#endif
 		tp = merge_collapse(priv, cmp, stk, tp);
+		#ifdef DEBUG_TIMSORT
+		printing_list(stk, tp);
+		#endif
 	} while (list);
+
+	#ifdef DEBUG_TIMSORT
+	printf("end of finding runs\n\n");
+	#endif
 
 	/* End of input; merge together all the runs. */
 	tp = merge_force_collapse(priv, cmp, stk, tp);

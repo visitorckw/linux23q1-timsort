@@ -10,3 +10,4 @@ void list_sort(void *priv, struct list_head *head, list_cmp_func_t cmp);
 void shiverssort(void *priv, struct list_head *head, list_cmp_func_t cmp);
 void timsort(void *priv, struct list_head *head, list_cmp_func_t cmp);
 void list_sort_old(void *priv, struct list_head *head, list_cmp_func_t cmp);
+void inplace_timsort(void *priv, struct list_head *head, list_cmp_func_t cmp);

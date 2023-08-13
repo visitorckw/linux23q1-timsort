@@ -92,7 +92,7 @@ static void merge_final(void *priv, list_cmp_func_t cmp, struct list_head *head,
 }
 
 static struct list_head *find_run(void *priv, struct list_head *list,
-				  size_t *len, list_cmp_func_t cmp)
+				  size_t *len, list_cmp_func_t cmp, struct run* run_head)
 {
 	*len = 1;
 	struct list_head *next = list->next;
@@ -109,9 +109,11 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 			prev = list;
 			list = next;
 			next = list->next;
+			run_head->list = list;
 		} while (next && cmp(priv, list, next) > 0);
 		list->next = prev;
 	} else {
+		run_head->list = list;
 		do {
 			(*len)++;
 			list = next;
@@ -169,7 +171,7 @@ void shiverssort(void *priv, struct list_head *head, list_cmp_func_t cmp)
 		tp++;
 		/* Find next run */
 		tp->list = list;
-		list = find_run(priv, list, &tp->len, cmp);
+		list = find_run(priv, list, &tp->len, cmp, tp);
 		tp = merge_collapse(priv, cmp, stk, tp);
 	} while (list);
 

@@ -12,16 +12,23 @@ typedef struct element {
 	int seq;
 } element_t;
 
-#define SAMPLES ((1 << 20) + 20)
+// #define SAMPLES ((1 << 20) + 20)
+// #define SAMPLES ((1 << 20) + 25)
+#define SAMPLES 100000
 
 static void create_sample(struct list_head *head, element_t *space, int samples)
 {
+	int arr[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+	printf("Start create sample\n");
 	for (int i = 0; i < samples; i++) {
 		element_t *elem = space+i;
-		elem->val = rand();
+		elem->val = rand() % 100;
+		// elem->val = arr[i];
 		elem->seq = i;
 		list_add_tail(&elem->list, head);
+		// printf("%d ", elem->val);
 	}
+	printf("\nFinish create sample\n");
 }
 
 static void copy_list(struct list_head *from, struct list_head *to, element_t *space)
@@ -66,10 +73,17 @@ int compare(void *priv, const struct list_head *a, const struct list_head *b)
 
 bool check_list(struct list_head *head, int count)
 {
+	printf("Start check list\n");
 	if (list_empty(head))
 		return count == 0;
 
 	element_t *entry, *safe;
+	size_t ctr = 0;
+	list_for_each_entry_safe(entry, safe, head, list) {
+		// printf("val:%d seq:%d\n", entry->val, entry->seq);
+		ctr++;
+	}
+	printf("\n");
 	list_for_each_entry_safe(entry, safe, head, list) {
 		if (entry->list.next != head) {
 			if (entry->val > safe->val ||
@@ -77,6 +91,11 @@ bool check_list(struct list_head *head, int count)
 				return false;
 			}
 		}
+	}
+
+	if (ctr != SAMPLES){
+		printf("Inconsistent number of elements: %ld\n", ctr);
+		return false;
 	}
 	return true;
 }
@@ -103,6 +122,7 @@ int main(void)
 			   { list_sort_old, "list_sort_old" },
 			   { shiverssort, "shiverssort" },
 			   { timsort, "timsort" },
+			   { inplace_timsort, "inplace_timsort" },
 			   { NULL, NULL } },
 	       *test = tests;
 

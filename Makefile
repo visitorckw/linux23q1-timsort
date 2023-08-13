@@ -23,6 +23,10 @@ measure: $(measureOBJS)
 	$(MAKE) main
 	$(CC) -o $@ $(CFLAGS) $^
 
+debug: .force
+.force:
+	gcc -g -o debug inplace_timsort.c list_sort.c list_sort_old.c main.c shiverssort.c timsort.c
+
 clean:
 	rm -f $(mainOBJS) $(deps) *~ main
 	rm -f $(measureOBJS) $(deps) *~ main
