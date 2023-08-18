@@ -53,8 +53,8 @@ size_t get_run_size(struct list_head *run_head) {
 	// }
 	if(!run_head)
 		return 0;
-	// if(!run_head->next)
-		// return 1;
+	if(!run_head->next)
+		return 1;
 	return (size_t)((run_head)->next->prev);
 	// return run_head ? (size_t)((run_head)->next->prev) : 0;
 }
