@@ -13,8 +13,8 @@ typedef struct element {
 } element_t;
 
 // #define SAMPLES ((1 << 20) + 20)
-#define SAMPLES ((1 << 20) + 25)
-// #define SAMPLES 100000
+// #define SAMPLES ((1 << 20) + 25)
+#define SAMPLES 1000000
 // #define SAMPLES 100
 // #define SAMPLES 50
 
@@ -128,7 +128,7 @@ int main(void)
 	int count;
 	int nums = SAMPLES;
 
-	srand(1050);
+	srand(10);
 
 	test_t tests[] = {
 			   { list_sort, "list_sort" },

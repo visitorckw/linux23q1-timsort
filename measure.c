@@ -95,9 +95,9 @@ int main(int argc, char **argv)
     FILE *fp = fopen(filename, "w");
 
     int start = 5;
-    int end = 5;
+    int end = 5 + 1000000;
 
-    for(int i = start; i <= end; i += 100000){
+    for(int i = start; i <= end; i += 10000){
         fprintf(fp, "%d ", i);
 
         struct list_head sample_head, warmdata_head, testdata_head;
@@ -108,8 +108,10 @@ int main(int argc, char **argv)
         test_t tests[] = {
                 { list_sort, "list_sort" },
                 { list_sort_old, "list_sort_old" },
-                { shiverssort, "shiverssort" },
-                { timsort, "timsort" },
+                // { shiverssort, "shiverssort" },
+                // { timsort, "timsort" },
+                { inplace_timsort, "inplace_timsort" },
+                { inplace_shiverssort, "inplace_shiverssort" },
                 { NULL, NULL } },
             *test = tests;
 

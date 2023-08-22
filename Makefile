@@ -27,7 +27,7 @@ measure: $(measureOBJS)
 
 debug: .force
 .force:
-	gcc -g -o debug inplace_timsort.c list_sort.c list_sort_old.c main.c shiverssort.c timsort.c
+	gcc -g -o debug inplace_timsort.c inplace_shiverssort.c list_sort.c list_sort_old.c main.c shiverssort.c timsort.c
 
 clean:
 	rm -f $(mainOBJS) $(deps) *~ main
