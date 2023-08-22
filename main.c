@@ -13,8 +13,10 @@ typedef struct element {
 } element_t;
 
 // #define SAMPLES ((1 << 20) + 20)
-// #define SAMPLES ((1 << 20) + 25)
-#define SAMPLES 100000
+#define SAMPLES ((1 << 20) + 25)
+// #define SAMPLES 100000
+// #define SAMPLES 100
+// #define SAMPLES 50
 
 static void create_sample(struct list_head *head, element_t *space, int samples)
 {
@@ -22,9 +24,9 @@ static void create_sample(struct list_head *head, element_t *space, int samples)
 	printf("Start create sample\n");
 	for (int i = 0; i < samples; i++) {
 		element_t *elem = space+i;
-		elem->val = rand() % 100;
-		// elem->val = arr[i];
-		elem->seq = i;
+		elem->val = rand();
+		// elem->val = (i & 1 ? i : SAMPLES - i);
+		// elem->seq = i;
 		list_add_tail(&elem->list, head);
 		// printf("%d ", elem->val);
 	}
@@ -77,6 +79,8 @@ bool check_list(struct list_head *head, int count)
 	if (list_empty(head))
 		return count == 0;
 
+	int unstable = 0;
+
 	element_t *entry, *safe;
 	size_t ctr = 0;
 	list_for_each_entry_safe(entry, safe, head, list) {
@@ -86,11 +90,20 @@ bool check_list(struct list_head *head, int count)
 	printf("\n");
 	list_for_each_entry_safe(entry, safe, head, list) {
 		if (entry->list.next != head) {
-			if (entry->val > safe->val ||
-			    (entry->val == safe->val && entry->seq > safe->seq)) {
+			if (entry->val > safe->val) {
+				printf("wrong order\n");
 				return false;
 			}
+			if (entry->val == safe->val && entry->seq > safe->seq) {
+				unstable++;
+				// printf("unstable\n");
+				// return false;
+			}
 		}
+	}
+	if(unstable) {
+		printf("unstable:%d\n", unstable);
+		return false;
 	}
 
 	if (ctr != SAMPLES){
@@ -123,6 +136,7 @@ int main(void)
 			   { shiverssort, "shiverssort" },
 			   { timsort, "timsort" },
 			   { inplace_timsort, "inplace_timsort" },
+			   { inplace_shiverssort, "inplace_shiverssort" },
 			   { NULL, NULL } },
 	       *test = tests;
 
@@ -143,11 +157,12 @@ int main(void)
 		copy_list(&sample_head, &warmdata_head, warmdata);
 		test->fp(&count, &warmdata_head, compare);
 		/* Test */
-		clock_t begin;
+		clock_t myTimer;
 		count = 0;
-		begin = clock();
+		myTimer = clock();
 		test->fp(&count, &testdata_head, compare);
-		printf("  Elapsed time:   %ld\n", clock() - begin);
+		myTimer = clock() - myTimer;
+		printf("  Elapsed time:   %ld\n", myTimer);
 		printf("  Comparisons:    %d\n", count);
 		printf("  List is %s\n",
 		       check_list(&testdata_head, nums) ? "sorted" : "not sorted");

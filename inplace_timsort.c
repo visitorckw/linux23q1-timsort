@@ -27,7 +27,7 @@ typedef struct element {
 // 	int seq;
 // } element_t;
 
-size_t get_run_size(struct list_head *run_head) {
+static size_t get_run_size(struct list_head *run_head) {
 	// if(run_head){
 	// 	// printf("getting run size\n");
 	// 	int ctr = 0;

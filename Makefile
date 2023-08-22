@@ -4,9 +4,11 @@ CFLAGS = -O2
 all: main
 
 mainOBJS := main.o list_sort.o shiverssort.o \
-        timsort.o list_sort_old.o inplace_timsort.o
+        timsort.o list_sort_old.o inplace_timsort.o \
+		inplace_shiverssort.o
 measureOBJS := measure.o list_sort.o shiverssort.o \
-		timsort.o list_sort_old.o inplace_timsort.o
+		timsort.o list_sort_old.o inplace_timsort.o \
+		inplace_shiverssort.o
 
 deps := $(OBJS:%.o=.%.o.d)
 

@@ -18,6 +18,98 @@ struct run {
 	size_t len;
 };
 
+// #define INSERTION_SORT
+
+#ifdef INSERTION_SORT
+#include <stdio.h>
+typedef struct element {
+	struct list_head list;
+	int val;
+	int seq;
+} element_t;
+static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted)
+{
+    /* Special case for the head end */
+	// if()
+	// printf("cmp %d, %d\n", list_entry((*sorted), element_t, list)->val, list_entry(newnode, element_t, list)->val);
+    if (*sorted == NULL || cmp(priv, *sorted, newnode) > 0) {
+        newnode->next = *sorted;
+        *sorted = newnode;
+    }
+    else {
+        struct list_head* current = *sorted;
+        /* Locate the node before the point of insertion
+         */
+		// printf("cmp %d, %d\n", list_entry(current->next, element_t, list)->val, list_entry(newnode, element_t, list)->val);
+        while (current->next != NULL
+               && cmp(priv, current->next, newnode) <= 0) {
+            current = current->next;
+        }
+        newnode->next = current->next;
+        current->next = newnode;
+    }
+}
+static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted)
+{
+    /* Special case for the head end */
+	// if()
+	// printf("cmp %d, %d\n", list_entry((*sorted), element_t, list)->val, list_entry(newnode, element_t, list)->val);
+    if (*sorted == NULL || cmp(priv, *sorted, newnode) >= 0) {
+        newnode->next = *sorted;
+        *sorted = newnode;
+    }
+    else {
+        struct list_head* current = *sorted;
+        /* Locate the node before the point of insertion
+         */
+		// printf("cmp %d, %d\n", list_entry(current->next, element_t, list)->val, list_entry(newnode, element_t, list)->val);
+        while (current->next != NULL
+               && cmp(priv, current->next, newnode) < 0) {
+            current = current->next;
+        }
+        newnode->next = current->next;
+        current->next = newnode;
+    }
+}
+  
+// function to sort a singly linked list 
+// using insertion sort
+static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct list_head* head, int asc)
+{
+    struct list_head* current = head;
+	struct list_head* sorted = NULL;
+
+	// printf("start insertion sort\n");
+	// for(struct list_head* cur = head; cur ; cur = cur->next) {
+	// 	printf("val:%d seq:%d\n", list_entry(cur, element_t, list)->val, list_entry(cur, element_t, list)->seq);
+	// }
+	// printf("\n");
+  
+    // Traverse the given linked list and insert every
+    // node to sorted
+    while (current != NULL) {
+  
+        // Store next for next iteration
+        struct list_head* next = current->next;
+  
+        // insert current in sorted linked list
+		if(asc) sortedInsertAsc(priv, cmp, current, &sorted);
+		else sortedInsertDes(priv, cmp, current, &sorted);
+  
+        // Update current
+        current = next;
+    }
+    // Update head to point to sorted linked list
+    // head = sorted;
+	// printf("after insertion sort\n");
+	// for(struct list_head* cur = sorted; cur ; cur = cur->next) {
+	// 	printf("val:%d seq:%d\n", list_entry(cur, element_t, list)->val, list_entry(cur, element_t, list)->seq);
+	// }
+	// printf("\n");
+	return sorted;
+}
+#endif
+
 static struct list_head *merge(void *priv, list_cmp_func_t cmp,
 				struct list_head *a, struct list_head *b)
 {
@@ -92,6 +184,8 @@ static void merge_final(void *priv, list_cmp_func_t cmp, struct list_head *head,
 	build_prev_link(head, tail, b);
 }
 
+#define MIN_RUN 35
+
 static struct list_head *find_run(void *priv, struct list_head *list,
 				  size_t *len, list_cmp_func_t cmp, struct run* run_head)
 {
@@ -100,8 +194,10 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 
 	if (unlikely(next == NULL))
 		return NULL;
-
-	if (cmp(priv, list, next) > 0) {
+	
+	int need_insertion_sort = 0;
+	int asc = cmp(priv, list, next) <= 0;
+	if (!asc) {
 		/* decending run, also reverse the list */
 		struct list_head *prev = NULL;
 		do {
@@ -112,6 +208,17 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 			next = list->next;
 			run_head->list = list;
 		} while (next && cmp(priv, list, next) > 0);
+		#ifdef INSERTION_SORT
+		while (next && (*len) < MIN_RUN) {
+			(*len)++;
+			list->next = prev;
+			prev = list;
+			list = next;
+			next = list->next;
+			run_head->list = list;
+			need_insertion_sort = 1;
+		}
+		#endif
 		list->next = prev;
 	} else {
 		run_head->list = list;
@@ -120,8 +227,21 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 			list = next;
 			next = list->next;
 		} while (next && cmp(priv, list, next) <= 0);
+		#ifdef INSERTION_SORT
+		while(next && (*len) < MIN_RUN) {
+			(*len)++;
+			list = next;
+			next = list->next;
+			need_insertion_sort = 1;
+		}
+		#endif
 		list->next = NULL;
 	}
+	#ifdef INSERTION_SORT
+	if(need_insertion_sort) {
+		run_head->list = insertionsort(priv, cmp, run_head->list, asc);
+	}
+	#endif
 
 	return next;
 }
@@ -171,7 +291,6 @@ static struct run *merge_collapse(void *priv, list_cmp_func_t cmp,
 	return tp;
 }
 
-#include <stdio.h>
 #ifdef DEBUG_TIMSORT
 typedef struct element {
 	struct list_head list;
