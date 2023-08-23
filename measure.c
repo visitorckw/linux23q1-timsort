@@ -96,8 +96,11 @@ int main(int argc, char **argv)
 
     int start = 5;
     int end = 5 + 1000000;
+    // int end = 5 + 1000;
+    // int step = 10;
+    int step = 10000;
 
-    for(int i = start; i <= end; i += 10000){
+    for(int i = start; i <= end; i += step){
         fprintf(fp, "%d ", i);
 
         struct list_head sample_head, warmdata_head, testdata_head;
@@ -106,12 +109,13 @@ int main(int argc, char **argv)
         int nums = i;
 
         test_t tests[] = {
-                { list_sort, "list_sort" },
+                // { list_sort, "list_sort" },
                 { list_sort_old, "list_sort_old" },
                 // { shiverssort, "shiverssort" },
                 // { timsort, "timsort" },
                 { inplace_timsort, "inplace_timsort" },
                 { inplace_shiverssort, "inplace_shiverssort" },
+                { inplace_powersort, "inplace_powersort" },
                 { NULL, NULL } },
             *test = tests;
 

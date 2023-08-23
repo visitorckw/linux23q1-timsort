@@ -46,9 +46,10 @@ if __name__ == "__main__":
     # ax.plot(X, Y[3], marker = 'x', markersize = 3, label = 'shiversort')
     # ax.plot(X, Y[4], marker = '^', markersize = 3, label = 'inplace_timsort')
     # ax.plot(X, Y[5], marker = 'x', markersize = 3, label = 'inplace_shiverssort')
-    ax.plot(X, Y[1], label = 'list_sort(Linux Kernel)')
-    ax.plot(X, Y[2], label = 'timsort')
-    ax.plot(X, Y[3], label = 'shiversort')
+    ax.plot(X, Y[0], label = 'list_sort(Linux Kernel)')
+    ax.plot(X, Y[1], label = 'timsort')
+    ax.plot(X, Y[2], label = 'shiversort')
+    ax.plot(X, Y[3], label = 'powersort')
     ax.legend(loc = 'upper left')
 
     # plt.show()
