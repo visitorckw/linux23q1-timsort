@@ -6,7 +6,12 @@ all: main
 mainOBJS := main.o list_sort.o shiverssort.o \
         timsort.o list_sort_old.o inplace_timsort.o \
 		inplace_shiverssort.o inplace_powersort.o
+
 measureOBJS := measure.o list_sort.o shiverssort.o \
+		timsort.o list_sort_old.o inplace_timsort.o \
+		inplace_shiverssort.o inplace_powersort.o
+
+measureNewOBJS := measure_listsort.o list_sort.o shiverssort.o \
 		timsort.o list_sort_old.o inplace_timsort.o \
 		inplace_shiverssort.o inplace_powersort.o
 
@@ -25,9 +30,13 @@ measure: $(measureOBJS)
 	$(MAKE) main
 	$(CC) -o $@ $(CFLAGS) $^
 
+measure_new: $(measureNewOBJS)
+	$(MAKE) main
+	$(CC) -o $@ $(CFLAGS) $^
+
 debug: .force
 .force:
-	gcc -g -o debug inplace_timsort.c inplace_shiverssort.c inplace_powersort.c list_sort.c list_sort_old.c main.c shiverssort.c timsort.c
+	gcc -g -o debug inplace_timsort.c inplace_shiverssort.c inplace_powersort.c list_sort.c list_sort_old.c shiverssort.c timsort.c main.c
 
 clean:
 	rm -f $(mainOBJS) $(deps) *~ main
