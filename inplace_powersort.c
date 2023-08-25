@@ -253,7 +253,7 @@ void inplace_powersort(void *priv, struct list_head *head, list_cmp_func_t cmp)
     list = result.next;
     stk_size = 1;
 
-	do {
+	while(list) {
 		/* Find next run */
         s2 = e1 + 1;
         struct pair result = find_run(priv, list, cmp, &len);
@@ -265,7 +265,8 @@ void inplace_powersort(void *priv, struct list_head *head, list_cmp_func_t cmp)
 		tp = merge_collapse(priv, cmp, tp);
         s1 = s2;
         e1 = e2;
-	} while (list);
+	}
+	// } while (list);
 
 	/* End of input; merge together all the runs. */
 	tp = merge_force_collapse(priv, cmp, tp);
