@@ -12,8 +12,8 @@
 
 #define MAX_MERGE_PENDING (sizeof(size_t) * 8) + 1
 
-// #define INSERTION_SORT
-// #define MIN_RUN 32
+#define INSERTION_SORT
+#define MIN_RUN 32
 
 #ifdef INSERTION_SORT
 #include <stdio.h>
@@ -89,7 +89,7 @@ static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* n
     /* Special case for the head end */
 	// if()
 	// printf("cmp %d, %d\n", list_entry((*sorted), element_t, list)->val, list_entry(newnode, element_t, list)->val);
-    if (*sorted == NULL || cmp(priv, *sorted, newnode) > 0) {
+    if (*sorted == NULL) {
         newnode->next = *sorted;
         *sorted = newnode;
     }
@@ -103,8 +103,14 @@ static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* n
         //     current = current->next;
         // }
 		current = binarySearchAsc(*sorted, newnode, priv, cmp, sorted);
-        newnode->next = current->next;
-        current->next = newnode;
+		if(current) {
+        	newnode->next = current->next;
+        	current->next = newnode;
+		}
+		else {
+			newnode->next = *sorted;
+        	*sorted = newnode;
+		}
     }
 }
 static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted)
@@ -112,7 +118,7 @@ static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* n
     /* Special case for the head end */
 	// if()
 	// printf("cmp %d, %d\n", list_entry((*sorted), element_t, list)->val, list_entry(newnode, element_t, list)->val);
-    if (*sorted == NULL || cmp(priv, *sorted, newnode) >= 0) {
+    if (*sorted == NULL) {
         newnode->next = *sorted;
         *sorted = newnode;
     }
@@ -126,8 +132,14 @@ static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* n
         //     current = current->next;
         // }
 		current = binarySearchDes(*sorted, newnode, priv, cmp, sorted);
-        newnode->next = current->next;
-        current->next = newnode;
+		if(current) {
+			newnode->next = current->next;
+			current->next = newnode;
+		}
+		else {
+			newnode->next = *sorted;
+        	*sorted = newnode;
+		}
     }
 }
   
@@ -135,6 +147,7 @@ static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* n
 // using insertion sort
 static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct list_head* head, int asc)
 {
+	int cmp_count = *((int *)priv);
     struct list_head* current = head;
 	struct list_head* sorted = NULL;
 
@@ -167,6 +180,7 @@ static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct l
 	// 	printf("val:%d seq:%d\n", list_entry(cur, element_t, list)->val, list_entry(cur, element_t, list)->seq);
 	// }
 	// printf("\n");
+	// printf("cmp_count:%d\n", *((int *)priv) - cmp_count);
 	return sorted;
 }
 #endif
@@ -305,6 +319,7 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 	#ifdef INSERTION_SORT
 	// need_insertion_sort = 0;
 	if(need_insertion_sort) {
+		// printf("sorting run len: %ld\n", *len);
 		run_head->list = insertionsort(priv, cmp, run_head->list, asc);
 	}
 	#endif
