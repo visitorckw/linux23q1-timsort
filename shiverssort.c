@@ -2,6 +2,8 @@
 #include "list_sort.h"
 
 #include <stdint.h>
+#include <stdlib.h>
+// #include <math.h>
 
 #ifndef likely
 #define likely(x) __builtin_expect(!!(x), 1)
@@ -22,6 +24,7 @@ typedef struct element {
 	int val;
 	int seq;
 } element_t;
+struct list_head* arr[MIN_RUN];
 
 // function to find out middle element
 static struct list_head* middle(struct list_head* start, struct list_head* last)
@@ -45,7 +48,8 @@ static struct list_head* middle(struct list_head* start, struct list_head* last)
 
 // Function for implementing the Binary
 // Search on linked list
-static struct list_head* binarySearchAsc(struct list_head* head, struct list_head* value, void *priv, list_cmp_func_t cmp, struct list_head** sorted)
+static struct list_head* binarySearchAsc(struct list_head* head, struct list_head* value, void *priv, list_cmp_func_t cmp,
+										struct list_head** sorted)
 {
     struct list_head* start = head;
     struct list_head* last = NULL;
@@ -84,36 +88,141 @@ static struct list_head* binarySearchDes(struct list_head* head, struct list_hea
     return result;
 }
 
-static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted)
+static int mysqrt(int x)
+{
+	int L = 0;
+	int R = 100;
+	int res = 0;
+	while(L <= R) {
+		int mid = (L + R) / 2;
+		if(mid * mid <= x) {
+			res = mid;
+			L = mid + 1;
+		}
+		else R = mid - 1;
+	}
+	return res;
+}
+
+static struct list_head* linearSearch(void *priv, list_cmp_func_t cmp, struct list_head* start, struct list_head* end, struct list_head* target)
+{
+    struct list_head* result = NULL;
+    struct list_head* cur = start;
+    while(cur != end) {
+		if(cmp(priv, cur, target) <= 0) result = cur;
+        else break;
+        cur = cur->next;
+    }
+    return result;
+}
+
+static struct list_head* jumpSearch(void *priv, list_cmp_func_t cmp, struct list_head* head, struct list_head* target, int length)
+{
+	if(!head) return NULL;
+    int step = mysqrt(length);
+	// printf("length:%d\n", length);
+    // printf("step:%d\n", step);
+	// printf("head val:%d\n", list_entry(head, element_t, list)->val);
+    static struct list_head dummy_real;
+    static struct list_head* dummy = &dummy_real;
+    dummy->next = head;
+    struct list_head* prev = head;
+    struct list_head* cur = dummy;
+    int index = -1;
+    while(index + step < length) {
+        prev = cur;
+        index += step;
+        for(int i = 0; i < step; i++) {
+            cur = cur->next;
+			// printf("val:%d\n", list_entry(cur, element_t, list)->val);
+        }
+		// printf("index:%d\n", index);
+		// printf("val:%d\n", list_entry(cur, element_t, list)->val);
+        if(cmp(priv, cur, target) > 0) {
+            struct list_head* result = linearSearch(priv, cmp, prev->next, cur, target);
+            return result ? result : (prev == dummy ? NULL : prev);
+        }
+    }
+
+    struct list_head* result = linearSearch(priv, cmp, cur, NULL, target);
+    return result ? result : cur;
+}
+
+// Function for implementing the Binary
+// Search with array on linked list
+int arrayBinarySearch(void *priv, list_cmp_func_t cmp, struct list_head* arr[], 
+											struct list_head* target, int length)
+{
+	// printf("start array binary search, length: %d\n", length);
+	// printf("target val:%d\n", list_entry(target, element_t, list)->val);
+	// for(int i = 0; i < length; i++) {
+	// 	if(!arr[i]) printf("NULL\n");
+	// 	else printf("val:%d seq:%d\n", list_entry(arr[i], element_t, list)->val, list_entry(arr[i], element_t, list)->seq);
+	// }
+	// printf("\n");
+
+	int L = 0;
+	int R = length - 1;
+	int M;
+	int res = -1;
+	while(L <= R) {
+		M = (L + R) / 2;
+		if(cmp(priv, arr[M], target) <= 0) {
+			res = M;
+			L = M + 1;
+		}
+		else {
+			R = M - 1;
+		}
+	}
+	return res;
+}
+
+static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* newnode, int length)
 {
     /* Special case for the head end */
 	// if()
 	// printf("cmp %d, %d\n", list_entry((*sorted), element_t, list)->val, list_entry(newnode, element_t, list)->val);
-    if (*sorted == NULL) {
-        newnode->next = *sorted;
-        *sorted = newnode;
+
+    if (!length) {
+        // newnode->next = *sorted;
+		arr[0] = newnode;
     }
     else {
-        struct list_head* current = *sorted;
+        // struct list_head* current = *sorted;
         /* Locate the node before the point of insertion
          */
-		// printf("cmp %d, %d\n", list_entry(current->next, element_t, list)->val, list_entry(newnode, element_t, list)->val);
-        // while (current->next != NULL
-        //        && cmp(priv, current->next, newnode) <= 0) {
-        //     current = current->next;
-        // }
-		current = binarySearchAsc(*sorted, newnode, priv, cmp, sorted);
-		if(current) {
-        	newnode->next = current->next;
-        	current->next = newnode;
+        
+		// if(cmp(priv, newnode, current) <= 0) current = NULL;
+		// else {
+		// 	while (current->next != NULL
+		// 		&& cmp(priv, current->next, newnode) <= 0) {
+		// 		current = current->next;
+		// 	}
+		// }
+
+		// struct list_head* current1 = binarySearchAsc(*sorted, newnode, priv, cmp, sorted);
+		// current = jumpSearch(priv, cmp, *sorted, newnode, length);
+
+		int index = arrayBinarySearch(priv, cmp, arr, newnode, length);
+		if(index == -1) {
+			newnode->next = arr[0];
+			for(int i = length; i > 0; i--) {
+				arr[i] = arr[i - 1];
+			}
 		}
 		else {
-			newnode->next = *sorted;
-        	*sorted = newnode;
+			arr[index]->next = newnode;
+			if(index + 1 != length)
+				newnode->next = arr[index + 1];
+			for(int i = length; i > index + 1; i--) {
+				arr[i] = arr[i - 1];
+			}
 		}
+		arr[index + 1] = newnode;
     }
 }
-static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted)
+static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* newnode, struct list_head** sorted, struct list_head** last)
 {
     /* Special case for the head end */
 	// if()
@@ -141,16 +250,19 @@ static void sortedInsertDes(void *priv, list_cmp_func_t cmp, struct list_head* n
         	*sorted = newnode;
 		}
     }
+	if(newnode->next == NULL) *last = newnode;
 }
   
 // function to sort a singly linked list 
 // using insertion sort
-static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct list_head* head, int asc)
+static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct list_head* head,
+										int asc, struct list_head** last)
 {
-	int cmp_count = *((int *)priv);
-    struct list_head* current = head;
-	struct list_head* sorted = NULL;
 
+	// int cmp_count = *((int *)priv);
+    struct list_head* current = head;
+	// struct list_head* sorted = NULL;
+	int sorted_length = 0;
 	// printf("start insertion sort\n");
 	// for(struct list_head* cur = head; cur ; cur = cur->next) {
 	// 	printf("val:%d seq:%d\n", list_entry(cur, element_t, list)->val, list_entry(cur, element_t, list)->seq);
@@ -167,21 +279,19 @@ static struct list_head* insertionsort(void *priv, list_cmp_func_t cmp, struct l
 		current->next = NULL;
   
         // insert current in sorted linked list
-		if(asc) sortedInsertAsc(priv, cmp, current, &sorted);
-		else sortedInsertDes(priv, cmp, current, &sorted);
+		// if(asc)
+		sortedInsertAsc(priv, cmp, current, sorted_length++);
+		// else sortedInsertDes(priv, cmp, current, &sorted, last);
   
         // Update current
         current = next;
     }
     // Update head to point to sorted linked list
     // head = sorted;
-	// printf("after insertion sort\n");
-	// for(struct list_head* cur = sorted; cur ; cur = cur->next) {
-	// 	printf("val:%d seq:%d\n", list_entry(cur, element_t, list)->val, list_entry(cur, element_t, list)->seq);
-	// }
-	// printf("\n");
 	// printf("cmp_count:%d\n", *((int *)priv) - cmp_count);
-	return sorted;
+	// return sorted;
+	*last = arr[sorted_length - 1];
+	return arr[0];
 }
 #endif
 
@@ -272,57 +382,24 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 
 	if (unlikely(next == NULL))
 		return NULL;
-	
-	int need_insertion_sort = 0;
-	int asc = cmp(priv, list, next) <= 0;
 
-	if (!asc) {
-		/* decending run, also reverse the list */
-		struct list_head *prev = NULL;
-		do {
-			(*len)++;
-			list->next = prev;
-			prev = list;
-			list = next;
-			next = list->next;
-			run_head->list = list;
-		} while (next && cmp(priv, list, next) > 0);
-		#ifdef INSERTION_SORT
-		while (next && (*len) < MIN_RUN) {
-			(*len)++;
-			list->next = prev;
-			prev = list;
-			list = next;
-			next = list->next;
-			run_head->list = list;
-			need_insertion_sort = 1;
-		}
-		#endif
-		list->next = prev;
-	} else {
-		run_head->list = list;
-		do {
-			(*len)++;
-			list = next;
-			next = list->next;
-		} while (next && cmp(priv, list, next) <= 0);
-		#ifdef INSERTION_SORT
-		while(next && (*len) < MIN_RUN) {
-			(*len)++;
-			list = next;
-			next = list->next;
-			need_insertion_sort = 1;
-		}
-		#endif
-		list->next = NULL;
-	}
-	#ifdef INSERTION_SORT
-	// need_insertion_sort = 0;
-	if(need_insertion_sort) {
-		// printf("sorting run len: %ld\n", *len);
-		run_head->list = insertionsort(priv, cmp, run_head->list, asc);
-	}
-	#endif
+    run_head->list = list;
+    while(next && (*len) < MIN_RUN) {
+        (*len)++;
+        list = next;
+        next = list->next;
+    }
+	list->next = NULL;
+	struct list_head *last = NULL;
+    run_head->list = insertionsort(priv, cmp, run_head->list, 1, &last);
+	last->next = next;
+	list = last;
+    while (next && cmp(priv, list, next) <= 0) {
+        (*len)++;
+        list = next;
+        next = list->next;
+    }
+	list->next = NULL;
 
 	return next;
 }
