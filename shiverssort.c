@@ -193,13 +193,26 @@ static void sortedInsertAsc(void *priv, list_cmp_func_t cmp, struct list_head* n
         /* Locate the node before the point of insertion
          */
         
-		// if(cmp(priv, newnode, current) <= 0) current = NULL;
-		// else {
-		// 	while (current->next != NULL
-		// 		&& cmp(priv, current->next, newnode) <= 0) {
-		// 		current = current->next;
-		// 	}
-		// }
+		struct list_head* current = arr[0];
+		if(cmp(priv, newnode, current) <= 0) current = NULL;
+		else {
+			while (current->next != NULL
+				&& cmp(priv, current->next, newnode) <= 0) {
+				current = current->next;
+			}
+		}
+		if(!current) {
+			newnode->next = arr[0];
+			arr[0] = newnode;
+		}
+		else {
+			newnode->next = current->next;
+			current->next = newnode;
+		}
+		arr[length] = arr[length-1];
+		if(newnode->next == NULL)
+			arr[length] = newnode;
+		return;
 
 		// struct list_head* current1 = binarySearchAsc(*sorted, newnode, priv, cmp, sorted);
 		// current = jumpSearch(priv, cmp, *sorted, newnode, length);
